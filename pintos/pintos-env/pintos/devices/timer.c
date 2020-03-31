@@ -29,6 +29,24 @@ static bool too_many_loops (unsigned loops);
 static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
 static void real_time_delay (int64_t num, int32_t denom);
+static bool compare_less_ticks (const struct list_elem *a, const struct list_elem *b, UNUSED void *);
+
+struct list threads_list;
+
+/* Comparator to assess priority in a list based on 
+   the least amount of ticks to sleep for. */
+bool
+compare_less_ticks (const struct list_elem *a, const struct list_elem *b, void * unused)
+{
+  (void)unused;  //suppress compiler warning
+  struct thread *temp_a;
+  struct thread *temp_b;
+
+  temp_a = list_entry(a, struct thread, elem);
+  temp_b = list_entry(b, struct thread, elem);
+  
+  return temp_a->ticks_sleep < temp_b->ticks_sleep;
+}
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
    and registers the corresponding interrupt. */
@@ -37,6 +55,8 @@ timer_init (void)
 {
   pit_configure_channel (0, 2, TIMER_FREQ);
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
+
+  list_init(&threads_list);
 }
 
 /* Calibrates loops_per_tick, used to implement brief delays. */
@@ -89,11 +109,19 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  struct thread *t = thread_current ();
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks) 
-    thread_yield ();
+  
+  t->ticks_sleep = start + ticks;
+  
+  intr_disable ();   
+  list_insert_ordered (&threads_list, &t->elem, compare_less_ticks, NULL);
+  thread_block ();
+  intr_enable ();
+
+  ASSERT (intr_get_level () == INTR_ON);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -172,6 +200,17 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+
+  struct thread *t;
+  while(!list_empty (&threads_list)) {    
+    t = list_entry (list_front (&threads_list), struct thread, elem);
+    
+    if (timer_ticks () < t->ticks_sleep)
+    break;
+    
+    list_pop_front (&threads_list);
+    thread_unblock (t);
+  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
