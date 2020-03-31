@@ -1,0 +1,17 @@
+# LaTeX
+*.log
+*.synctex.gz
+*.aux
+*.toc
+*.out
+
+# System
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Compilation and tests output
+*.o
+*.output
+*.errors
+*.result
