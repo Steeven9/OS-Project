@@ -15,3 +15,7 @@ desktop.ini
 *.output
 *.errors
 *.result
+*.bin
+pintos/pintos-env/pintos/*/build/
+bochsout.txt
+bochsrc.txt
