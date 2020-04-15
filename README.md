@@ -19,3 +19,12 @@ Done alone
 Files modified:\
 `pintos/pintos-env/pintos/devices/timer.c`\
 `pintos/pintos-env/pintos/threads/thread.h`
+
+
+## Assignment 3
+Done with Marco Tereh
+
+Files modified:\
+`pintos/pintos-env/pintos/threads/thread.h`\
+`pintos/pintos-env/pintos/threads/thread.c`\
+`pintos/pintos-env/pintos/threads/fpr_arith.h` (from iCorsi)
