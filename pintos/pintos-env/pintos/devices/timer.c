@@ -45,7 +45,7 @@ compare_less_ticks (const struct list_elem *a, const struct list_elem *b, void *
   temp_a = list_entry(a, struct thread, elem);
   temp_b = list_entry(b, struct thread, elem);
   
-  return temp_a->ticks_sleep < temp_b->ticks_sleep;
+  return temp_a->wakeup_tick < temp_b->wakeup_tick;
 }
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
@@ -114,7 +114,7 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON);
   
-  t->ticks_sleep = start + ticks;
+  t->wakeup_tick = start + ticks;
   
   intr_disable ();   
   list_insert_ordered (&threads_list, &t->elem, compare_less_ticks, NULL);
@@ -205,7 +205,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   while(!list_empty (&threads_list)) {    
     t = list_entry (list_front (&threads_list), struct thread, elem);
     
-    if (timer_ticks () < t->ticks_sleep)
+    if (timer_ticks () < t->wakeup_tick)
     break;
     
     list_pop_front (&threads_list);

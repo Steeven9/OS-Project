@@ -98,10 +98,10 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
 #endif
 
-    /* Owned by thread.c. */
-    unsigned magic;                     /* Detects stack overflow. */
+    int64_t wakeup_tick;                /* Tick at which to wake the thread up. */
 
-    int64_t ticks_sleep;                /* Number of ticks to sleep for. */
+    /* Owned by thread.c. */
+    unsigned magic;                     /* Detects stack overflow. */    
   };
 
 /* If false (default), use round-robin scheduler.
