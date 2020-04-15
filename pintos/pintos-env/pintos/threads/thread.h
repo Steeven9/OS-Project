@@ -100,7 +100,7 @@ struct thread
 #endif
 
     int64_t wakeup_tick;                /* Tick at which to wake the thread up. */
-    int8_t nice;                        /* "Nice" value for scheduler */
+    int nice;                           /* "Nice" value for scheduler */
     FPReal recent_cpu;                  /* How much cpu the thread has used recently */
 
     /* Owned by thread.c. */
