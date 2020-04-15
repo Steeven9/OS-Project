@@ -6,6 +6,11 @@
 #include "../../lib/kernel/list.h"
 #include "listpop.h"
 
+void populate(struct list * l, int * a, int n);
+bool compare_items(const struct list_elem * a, const struct list_elem * b, void * aux UNUSED);
+void print_sorted(struct list * l);
+void test_print_sorted(void);
+
 struct item {
 	struct list_elem elem;
 	int priority;
@@ -27,7 +32,7 @@ void populate(struct list * l, int * a, int n) {
 /**
  * Helper function to sort the list.
  */
-bool compare_items(const struct list_elem * a, const struct list_elem * b, void * aux) {
+bool compare_items(const struct list_elem * a, const struct list_elem * b, void * aux UNUSED) {
 	struct item * ia = list_entry(a, struct item, elem);
 	struct item * ib = list_entry(b, struct item, elem);
 	return (ia->priority < ib->priority);
