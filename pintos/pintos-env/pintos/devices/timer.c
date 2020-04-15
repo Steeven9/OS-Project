@@ -36,9 +36,8 @@ struct list threads_list;
 /* Comparator to assess priority in a list based on 
    the least amount of ticks to sleep for. */
 bool
-compare_less_ticks (const struct list_elem *a, const struct list_elem *b, void * unused)
+compare_less_ticks (const struct list_elem *a, const struct list_elem *b, void * unused UNUSED)
 {
-  (void)unused;  //suppress compiler warning
   struct thread *temp_a;
   struct thread *temp_b;
 

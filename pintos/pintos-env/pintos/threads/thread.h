@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "fpr_arith.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -99,6 +100,8 @@ struct thread
 #endif
 
     int64_t wakeup_tick;                /* Tick at which to wake the thread up. */
+    int8_t nice;                        /* "Nice" value for scheduler */
+    FPReal recent_cpu;                  /* How much cpu the thread has used recently */
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */    
@@ -133,6 +136,7 @@ typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
+int thread_get_priority_of (struct thread * t);
 void thread_set_priority (int);
 
 int thread_get_nice (void);
