@@ -19,3 +19,7 @@ desktop.ini
 pintos/pintos-env/pintos/*/build/
 bochsout.txt
 bochsrc.txt
+
+# IDEs
+.vscode
+.idea
