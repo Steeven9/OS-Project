@@ -28,7 +28,7 @@ static void syscall_handler(struct intr_frame *f) {
             putbuf(buf, size);
             break;
         case SYS_EXIT:
-            printf("exiting\n");
+            //printf("exiting\n");
             f->eax = POP(int);
             thread_exit();
             NOT_REACHED();
