@@ -78,14 +78,13 @@ static void start_process(void *file_name_) {
     if_.eflags = FLAG_IF | FLAG_MBS;
     success = load(file_name, &if_.eip, &if_.esp);
 
-
     char *pointers[args_len];
 
     int argc = 0;
     if (args_len > 0) {
-        // copy arguments onto the stack
+        // Copy arguments onto the stack (in reverse order)
         for (i = args_len - 1; file_name + i >= file_name; i--) {
-            //printf("%c", file_name[i]);
+            // Handle double spaces
             if (file_name[i] == ' ' && file_name[i+1] == '\0') {
                 file_name[i] = '\0';
                 continue;
@@ -98,35 +97,36 @@ static void start_process(void *file_name_) {
                 argc++;
             }
         }
+        
         if_.esp -= strlen(file_name) + 1;
         pointers[argc] = if_.esp;
         memcpy(if_.esp, file_name, strlen(file_name) + 1);
         argc++;
 
-        // null-terminator for the ARGV array??
+        // Add null-terminator for the argv array
         if_.esp -= sizeof(char *);
         memset(if_.esp, 0, sizeof(char *));
-        // ARGV content
+
+        // Save argv pointers
         for (i = 0; i < argc; i++) {
             if_.esp -= sizeof(char *);
             *(char **)if_.esp = pointers[i];
         }
-
-
     } else {
-        // null-terminator for the ARGV array??
+        // Add null-terminator for the argv array
         if_.esp -= sizeof(char *);
         memset(if_.esp, 0, sizeof(char *));
     }
-    // puush argv pointer on stack
+
+    // Push argv pointers on stack
     if_.esp -= sizeof(char **);
     *(char **)if_.esp = (char *) if_.esp + sizeof(char **);
 
-    // push argc on stack
+    // Push argc on stack
     if_.esp -= sizeof(int);
     *(int *)if_.esp = argc;
 
-    // push return address on stack
+    // Push the return address on stack
     if_.esp -= sizeof(void (*)(void));
     *(void (**)(void))if_.esp = (void (*)(void)) 0;
 
@@ -150,10 +150,7 @@ static void start_process(void *file_name_) {
    exception), returns -1.  If TID is invalid or if it was not a
    child of the calling process, or if process_wait() has already
    been successfully called for the given TID, returns -1
-   immediately, without waiting.
-
-   This function will be implemented in problem 2-2.  For now, it
-   does nothing. */
+   immediately, without waiting. */
 int process_wait(tid_t child_tid) {
     struct thread *child = thread_get(child_tid);
     if (child == NULL) return -1;
@@ -167,7 +164,6 @@ int process_wait(tid_t child_tid) {
     thread_block();
     intr_enable();
 
-    // be unblocked
     return result_code;
 }
 

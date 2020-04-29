@@ -103,8 +103,8 @@ struct thread
 	int nice;			 /* "Nice" value for scheduler */
 	FPReal recent_cpu;	 /* How much cpu the thread has used recently */
 
-	struct thread *parent;
-	int *parent_result;
+	struct thread *parent; /* Pointer to parent thread. */
+	int *parent_result;    /* Pointer to save the return code after exiting. */
 
 	/* Owned by thread.c. */
 	unsigned magic; /* Detects stack overflow. */

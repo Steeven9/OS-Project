@@ -28,3 +28,14 @@ Files modified:\
 `pintos/pintos-env/pintos/threads/thread.h`\
 `pintos/pintos-env/pintos/threads/thread.c`\
 `pintos/pintos-env/pintos/threads/fpr_arith.h` (from iCorsi)
+
+
+## Assignment 4
+Done with Marco Tereh
+
+Files modified:\
+`pintos/pintos-env/pintos/threads/thread.h`\
+`pintos/pintos-env/pintos/threads/thread.c`\
+`pintos/pintos-env/pintos/userprog/process.c`\
+`pintos/pintos-env/pintos/userprog/syscall.c`\
+`pintos/pintos-env/pintos/lib/syscall-nr.h`

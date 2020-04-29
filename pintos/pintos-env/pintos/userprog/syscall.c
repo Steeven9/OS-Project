@@ -4,8 +4,7 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 
-#define POP_old(TYPE) *(TYPE *)f->esp; f->esp += sizeof(TYPE)
-#define POP(TYPE) *(TYPE *)(f->esp + read_bytes); read_bytes += sizeof(TYPE)
+#define READ(TYPE) *(TYPE *)(f->esp + read_bytes); read_bytes += sizeof(TYPE)
 
 static void syscall_handler(struct intr_frame *);
 
@@ -13,22 +12,23 @@ void syscall_init(void) {
     intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
 }
 
+/* Handle system calls, putting the return code in f->eax.
+   Calls thread_unblock() on the parent when the child has 
+   finished executing. */
 static void syscall_handler(struct intr_frame *f) {
-    // set f->eax to return value
-    // putbuf
     unsigned int read_bytes = 0;
-    enum syscall_nr num = POP(enum syscall_nr);
+    enum syscall_nr num = READ(enum syscall_nr);
+
     switch (num) {
         int UNUSED fd;
         case SYS_WRITE:
-            fd = POP(int);
-            char *buf = (char *) POP(char *);
-            unsigned int size = POP(unsigned int);
-            //printf("write %d bytes :%s:\n", size, buf);
+            fd = READ(int);
+            char *buf = (char *) READ(char *);
+            unsigned int size = READ(unsigned int);
             putbuf(buf, size);
             break;
         case SYS_EXIT:
-            f->eax = POP(int);
+            f->eax = READ(int);
             *(thread_current()->parent_result) = f->eax;
             printf("%s: exit(%d)\n", thread_current()->name, f->eax);
             thread_unblock(thread_current()->parent);
@@ -38,7 +38,6 @@ static void syscall_handler(struct intr_frame *f) {
         default:
             printf("unknown system call!\n");
             thread_exit();
+            NOT_REACHED();
     }
-
-    // thread_exit();
 }
