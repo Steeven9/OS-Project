@@ -103,6 +103,9 @@ struct thread
 	int nice;			 /* "Nice" value for scheduler */
 	FPReal recent_cpu;	 /* How much cpu the thread has used recently */
 
+	struct thread *parent;
+	int *parent_result;
+
 	/* Owned by thread.c. */
 	unsigned magic; /* Detects stack overflow. */
 };
@@ -114,6 +117,8 @@ extern bool thread_mlfqs;
 
 void thread_init(void);
 void thread_start(void);
+
+struct thread *thread_get(tid_t tid);
 
 void thread_tick(void);
 void thread_print_stats(void);

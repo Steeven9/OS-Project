@@ -38,8 +38,18 @@ tid_t process_execute(const char *file_name) {
         return TID_ERROR;
     strlcpy(fn_copy, file_name, PGSIZE);
 
+    char name[16];
+    strlcpy(name, file_name, 16);
+    int i;
+    for (i = 0; name[i] != '\0'; i++) {
+        if (name[i] == ' ') {
+            name[i] = '\0';
+            break;
+        }
+    }
+
     /* Create a new thread to execute FILE_NAME. */
-    tid = thread_create(file_name, PRI_DEFAULT, start_process, fn_copy);
+    tid = thread_create(name, PRI_DEFAULT, start_process, fn_copy);
     if (tid == TID_ERROR)
         palloc_free_page(fn_copy);
     return tid;
@@ -76,7 +86,11 @@ static void start_process(void *file_name_) {
         // copy arguments onto the stack
         for (i = args_len - 1; file_name + i >= file_name; i--) {
             //printf("%c", file_name[i]);
-            if (file_name[i] == ' ' || file_name[i] == '\0') {
+            if (file_name[i] == ' ' && file_name[i+1] == '\0') {
+                file_name[i] = '\0';
+                continue;
+            }
+            if ((file_name[i] == ' ' && file_name[i+1] != '\0') || file_name[i] == '\0') {
                 if_.esp -= strlen(file_name + i + 1) + 1;
                 pointers[argc] = if_.esp;
                 memcpy(if_.esp, file_name + i + 1, strlen(file_name + i + 1) + 1);
@@ -84,6 +98,11 @@ static void start_process(void *file_name_) {
                 argc++;
             }
         }
+        if_.esp -= strlen(file_name) + 1;
+        pointers[argc] = if_.esp;
+        memcpy(if_.esp, file_name, strlen(file_name) + 1);
+        argc++;
+
         // null-terminator for the ARGV array??
         if_.esp -= sizeof(char *);
         memset(if_.esp, 0, sizeof(char *));
@@ -135,8 +154,21 @@ static void start_process(void *file_name_) {
 
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
-int process_wait(tid_t child_tid UNUSED) {
-    return -1;
+int process_wait(tid_t child_tid) {
+    struct thread *child = thread_get(child_tid);
+    if (child == NULL) return -1;
+    if (child->parent != NULL) return -1;
+    child->parent = thread_current();
+
+    int result_code;
+    child->parent_result = &result_code;
+
+    intr_disable();
+    thread_block();
+    intr_enable();
+
+    // be unblocked
+    return result_code;
 }
 
 /* Free the current process's resources. */

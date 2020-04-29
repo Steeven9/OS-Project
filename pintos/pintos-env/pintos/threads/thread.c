@@ -88,6 +88,18 @@ bool compare_less_priority(const struct list_elem *a, const struct list_elem *b,
 	return thread_get_priority_of(temp_a) < thread_get_priority_of(temp_b);
 }
 
+
+struct thread *thread_get(tid_t tid) {
+    struct list_elem *cur;
+    for (cur = list_begin(&all_list); cur != list_end(&all_list); cur = list_next(cur)) {
+        struct thread* t = list_entry(cur, struct thread, allelem);
+        if (t->tid == tid) {
+            return t;
+        }
+    }
+    return NULL;
+}
+
 /* 
   Updates the recent_cpu value based on system load.
 */
@@ -247,6 +259,8 @@ tid_t thread_create(const char *name, int priority,
 	/* Initialize thread. */
 	init_thread(t, name, priority);
 	tid = t->tid = allocate_tid();
+
+	t->parent = NULL;
 
 	/* Prepare thread for first run by initializing its stack.
 	 Do this atomically so intermediate values for the 'stack' 
