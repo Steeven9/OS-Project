@@ -39,3 +39,15 @@ Files modified:\
 `pintos/pintos-env/pintos/userprog/process.c`\
 `pintos/pintos-env/pintos/userprog/syscall.c`\
 `pintos/pintos-env/pintos/lib/syscall-nr.h`
+
+
+
+## Assignment 5
+Done with Marco Tereh
+
+Files modified:\
+`pintos/pintos-env/pintos/threads/thread.h`
+`pintos/pintos-env/pintos/userprog/pagedir.c`
+`pintos/pintos-env/pintos/userprog/pagedir.h`
+`pintos/pintos-env/pintos/userprog/process.c`
+`pintos/pintos-env/pintos/userprog/syscall.c`

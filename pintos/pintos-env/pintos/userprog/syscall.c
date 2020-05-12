@@ -3,8 +3,12 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "userprog/process.h"
+#include "threads/vaddr.h"
+#include "userprog/pagedir.h"
 
 #define READ(TYPE) *(TYPE *)(f->esp + read_bytes); read_bytes += sizeof(TYPE)
+#define ERROR_EXIT -1
 
 static void syscall_handler(struct intr_frame *);
 
@@ -24,19 +28,39 @@ static void syscall_handler(struct intr_frame *f) {
         case SYS_WRITE:
             fd = READ(int);
             char *buf = (char *) READ(char *);
+            if (buf == NULL || !is_user_vaddr(buf) || lookup_page(active_pd(), buf, false) == NULL) {
+                f->eax = ERROR_EXIT;
+                goto EXIT;
+            }
             unsigned int size = READ(unsigned int);
             putbuf(buf, size);
             break;
         case SYS_EXIT:
             f->eax = READ(int);
-            *(thread_current()->parent_result) = f->eax;
+        EXIT:
+            thread_current()->result_code = f->eax;
             printf("%s: exit(%d)\n", thread_current()->name, f->eax);
-            thread_unblock(thread_current()->parent);
+            if (thread_current()->parent) {
+                thread_unblock(thread_current()->parent);
+            }
             thread_exit();
             NOT_REACHED();
             break;
+        case SYS_WAIT:
+            //TODO implement
+            PANIC("not implemented yet");
+            break;
+        case SYS_EXEC:
+            fd = 0; //To avoid compiler warnings
+            char *cmdline = READ(char *);
+            if (cmdline == NULL || !is_user_vaddr(cmdline) || lookup_page(active_pd(), cmdline, false) == NULL) {
+                f->eax = ERROR_EXIT;
+                goto EXIT;
+            }
+            f->eax = process_execute(cmdline);
+            break;
         default:
-            printf("unknown system call!\n");
+            PANIC("unknown system call");
             thread_exit();
             NOT_REACHED();
     }

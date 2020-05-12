@@ -104,7 +104,7 @@ struct thread
 	FPReal recent_cpu;	 /* How much cpu the thread has used recently */
 
 	struct thread *parent; /* Pointer to parent thread. */
-	int *parent_result;    /* Pointer to save the return code after exiting. */
+	int result_code;       /* Result code (only used if this thread is a process). */
 
 	/* Owned by thread.c. */
 	unsigned magic; /* Detects stack overflow. */

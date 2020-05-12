@@ -17,6 +17,12 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include "threads/synch.h"
+#include "lib/user/syscall.h"
+
+//Semaphores for child creation
+static struct semaphore * creation_sem = NULL;
+static struct semaphore * child_sem = NULL;
 
 static thread_func start_process
 NO_RETURN;
@@ -28,6 +34,21 @@ static bool load(const char *cmdline, void (**eip)(void), void **esp);
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
 tid_t process_execute(const char *file_name) {
+    //Initialize semaphores
+    if (creation_sem == NULL) {
+        static struct semaphore s;
+        creation_sem = &s;
+        sema_init(creation_sem, 1);
+    }
+    if (child_sem == NULL) {
+        static struct semaphore s;
+        child_sem = &s;
+        sema_init(child_sem, 0);
+    }
+
+    //Acquire creation semaphore
+    sema_down(creation_sem);
+
     char *fn_copy;
     tid_t tid;
 
@@ -50,8 +71,20 @@ tid_t process_execute(const char *file_name) {
 
     /* Create a new thread to execute FILE_NAME. */
     tid = thread_create(name, PRI_DEFAULT, start_process, fn_copy);
-    if (tid == TID_ERROR)
+    if (tid == TID_ERROR) {
         palloc_free_page(fn_copy);
+    }
+
+    //Wait on child semaphore
+    sema_down(child_sem);
+
+    if (0) { //TODO find a way to detect children failure
+        tid = TID_ERROR;
+    }
+
+    //Release creation semaphore
+    sema_up(creation_sem);
+
     return tid;
 }
 
@@ -77,6 +110,21 @@ static void start_process(void *file_name_) {
     if_.cs = SEL_UCSEG;
     if_.eflags = FLAG_IF | FLAG_MBS;
     success = load(file_name, &if_.eip, &if_.esp);
+
+    /* If load failed, quit. */
+    if (!success) {
+        palloc_free_page(file_name_);
+        thread_current()->result_code = -1;
+        printf("%s: exit(%d)\n", thread_current()->name, -1);
+
+        if (thread_current()->parent) {
+            thread_unblock(thread_current()->parent);
+        }
+
+        sema_up(child_sem);
+        thread_exit();
+        NOT_REACHED();
+    }
 
     char *pointers[args_len];
 
@@ -130,10 +178,10 @@ static void start_process(void *file_name_) {
     if_.esp -= sizeof(void (*)(void));
     *(void (**)(void))if_.esp = (void (*)(void)) 0;
 
-    /* If load failed, quit. */
-    palloc_free_page(file_name);
-    if (!success)
-        thread_exit();
+    //Creation comlpete, release child semaphore
+    sema_up(child_sem);
+
+    palloc_free_page(file_name_);
 
     /* Start the user process by simulating a return from an
        interrupt, implemented by intr_exit (in
@@ -157,14 +205,11 @@ int process_wait(tid_t child_tid) {
     if (child->parent != NULL) return -1;
     child->parent = thread_current();
 
-    int result_code;
-    child->parent_result = &result_code;
-
     intr_disable();
     thread_block();
     intr_enable();
 
-    return result_code;
+    return child->result_code;
 }
 
 /* Free the current process's resources. */
