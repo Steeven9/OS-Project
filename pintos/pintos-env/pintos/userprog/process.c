@@ -24,6 +24,9 @@
 static struct semaphore * creation_sem = NULL;
 static struct semaphore * child_sem = NULL;
 
+//Keep track of mid-way process abortion
+static int process_aborted;
+
 static thread_func start_process
 NO_RETURN;
 
@@ -48,6 +51,9 @@ tid_t process_execute(const char *file_name) {
 
     //Acquire creation semaphore
     sema_down(creation_sem);
+
+    //Reset abort status
+    process_aborted = 0;
 
     char *fn_copy;
     tid_t tid;
@@ -78,7 +84,7 @@ tid_t process_execute(const char *file_name) {
     //Wait on child semaphore
     sema_down(child_sem);
 
-    if (0) { //TODO find a way to detect children failure
+    if (process_aborted) {
         tid = TID_ERROR;
     }
 
@@ -114,8 +120,11 @@ static void start_process(void *file_name_) {
     /* If load failed, quit. */
     if (!success) {
         palloc_free_page(file_name_);
-        thread_current()->result_code = -1;
         printf("%s: exit(%d)\n", thread_current()->name, -1);
+
+        //Signal problem
+        process_aborted = 1;
+        thread_current()->result_code = -1;
 
         if (thread_current()->parent) {
             thread_unblock(thread_current()->parent);
@@ -204,6 +213,10 @@ int process_wait(tid_t child_tid) {
     if (child == NULL) return -1;
     if (child->parent != NULL) return -1;
     child->parent = thread_current();
+
+    if (thread_get(child_tid)->status == THREAD_DYING) {
+        return child->result_code;
+    }
 
     intr_disable();
     thread_block();

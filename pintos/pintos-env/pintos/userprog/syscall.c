@@ -46,13 +46,14 @@ static void syscall_handler(struct intr_frame *f) {
             thread_exit();
             NOT_REACHED();
             break;
+        tid_t child;
         case SYS_WAIT:
-            //TODO implement
-            PANIC("not implemented yet");
+            child = READ(tid_t);
+            f->eax = process_wait(child);
             break;
+        char *cmdline;
         case SYS_EXEC:
-            fd = 0; //To avoid compiler warnings
-            char *cmdline = READ(char *);
+            cmdline = READ(char *);
             if (cmdline == NULL || !is_user_vaddr(cmdline) || lookup_page(active_pd(), cmdline, false) == NULL) {
                 f->eax = ERROR_EXIT;
                 goto EXIT;
