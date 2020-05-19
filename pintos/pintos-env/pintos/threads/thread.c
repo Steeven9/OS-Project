@@ -260,8 +260,6 @@ tid_t thread_create(const char *name, int priority,
 	init_thread(t, name, priority);
 	tid = t->tid = allocate_tid();
 
-	t->parent = NULL;
-
 	/* Prepare thread for first run by initializing its stack.
 	 Do this atomically so intermediate values for the 'stack' 
 	 member cannot be observed. */
@@ -366,6 +364,10 @@ void thread_exit(void) {
 	 and schedule another process.  That process will destroy us
 	 when it calls thread_schedule_tail(). */
 	intr_disable();
+    printf("%s: exit(%d)\n", thread_current()->name, thread_current()->result_code);
+    if (thread_current()->parent) {
+        thread_unblock(thread_current()->parent);
+    }
 	list_remove(&thread_current()->allelem);
 	thread_current()->status = THREAD_DYING;
 	schedule();
@@ -519,6 +521,9 @@ static void init_thread(struct thread *t, const char *name, int priority) {
 	t->stack = (uint8_t *)t + PGSIZE;
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
+
+    t->parent = NULL;
+    t->result_code = -1;
 
 	/* Initialize values for scheduler */
 	t->recent_cpu = 0;

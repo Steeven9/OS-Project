@@ -120,15 +120,9 @@ static void start_process(void *file_name_) {
     /* If load failed, quit. */
     if (!success) {
         palloc_free_page(file_name_);
-        printf("%s: exit(%d)\n", thread_current()->name, -1);
 
         //Signal problem
         process_aborted = 1;
-        thread_current()->result_code = -1;
-
-        if (thread_current()->parent) {
-            thread_unblock(thread_current()->parent);
-        }
 
         sema_up(child_sem);
         thread_exit();
@@ -209,6 +203,7 @@ static void start_process(void *file_name_) {
    been successfully called for the given TID, returns -1
    immediately, without waiting. */
 int process_wait(tid_t child_tid) {
+#ifdef USERPROG
     struct thread *child = thread_get(child_tid);
     if (child == NULL) return -1;
     if (child->parent != NULL) return -1;
@@ -223,6 +218,9 @@ int process_wait(tid_t child_tid) {
     intr_enable();
 
     return child->result_code;
+#else
+  return -1;
+#endif
 }
 
 /* Free the current process's resources. */
