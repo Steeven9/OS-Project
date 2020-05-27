@@ -46,11 +46,11 @@ Files modified:\
 Done with Marco Tereh
 
 Files modified:\
-`pintos/pintos-env/pintos/threads/thread.h`
-`pintos/pintos-env/pintos/userprog/pagedir.c`
-`pintos/pintos-env/pintos/userprog/pagedir.h`
-`pintos/pintos-env/pintos/userprog/process.c`
-`pintos/pintos-env/pintos/userprog/syscall.c`
+`pintos/pintos-env/pintos/threads/thread.h`\
+`pintos/pintos-env/pintos/userprog/pagedir.c`\
+`pintos/pintos-env/pintos/userprog/pagedir.h`\
+`pintos/pintos-env/pintos/userprog/process.c`\
+`pintos/pintos-env/pintos/userprog/syscall.c`\
 
 
 
@@ -58,7 +58,7 @@ Files modified:\
 Done with Marco Tereh
 
 Files modified:\
-`pintos/pintos-env/pintos/tests/userprog/no-vm/Make.tests` (reducded the timeout)
-`pintos/pintos-env/pintos/threads/thread.c`
-`pintos/pintos-env/pintos/userprog/process.c`
-`pintos/pintos-env/pintos/userprog/syscall.c`
+`pintos/pintos-env/pintos/tests/userprog/no-vm/Make.tests` (reducded the timeout)\
+`pintos/pintos-env/pintos/threads/thread.c`\
+`pintos/pintos-env/pintos/userprog/process.c`\
+`pintos/pintos-env/pintos/userprog/syscall.c`\

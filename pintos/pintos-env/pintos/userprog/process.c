@@ -203,7 +203,6 @@ static void start_process(void *file_name_) {
    been successfully called for the given TID, returns -1
    immediately, without waiting. */
 int process_wait(tid_t child_tid) {
-#ifdef USERPROG
     struct thread *child = thread_get(child_tid);
     if (child == NULL) return -1;
     if (child->parent != NULL) return -1;
@@ -217,10 +216,10 @@ int process_wait(tid_t child_tid) {
     thread_block();
     intr_enable();
 
-    return child->result_code;
-#else
-  return -1;
-#endif
+    int code = child->result_code;
+    thread_unblock(child);
+
+    return code;
 }
 
 /* Free the current process's resources. */

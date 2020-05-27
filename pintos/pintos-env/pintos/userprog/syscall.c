@@ -84,7 +84,11 @@ static void syscall_handler(struct intr_frame *f) {
             } else {
                 item.fd = fd;
                 e = hash_find(&fd_table, &item.elem);
-                f->eax = file_write(hash_entry(e, struct item, elem)->file, buf, size);
+                if (!e) {
+                    f->eax = -1;
+                } else {
+                    f->eax = file_write(hash_entry(e, struct item, elem)->file, buf, size);
+                }
             }
 
             sema_up(&filesys_sem);
@@ -131,13 +135,17 @@ static void syscall_handler(struct intr_frame *f) {
             name = (char *) READ(char *);
             CHECK_POINTER(name);
             struct file * file = filesys_open(name);
+            if (!file) {
+                f->eax = -1;
+                sema_up(&filesys_sem);
+                break;
+            }
             static unsigned next_fd = 2;    //0 and 1 are reserved to stdin and out
             struct item * new_item = malloc(sizeof(struct item));
             new_item->fd = next_fd++;
             new_item->file = file;
             hash_insert(&fd_table, &new_item->elem);
             f->eax = new_item->fd;
-            //Memory leaks weee
             sema_up(&filesys_sem);
             break;
         case SYS_CLOSE:
@@ -150,7 +158,10 @@ static void syscall_handler(struct intr_frame *f) {
             }
             item.fd = fd;
             e = hash_find(&fd_table, &item.elem);
-            file_close(hash_entry(e, struct item, elem)->file);
+            if (e) {
+                file_close(hash_entry(e, struct item, elem)->file);
+                hash_delete(&fd_table, &item.elem);
+            }
             sema_up(&filesys_sem);
             break;
         case SYS_READ:
@@ -169,7 +180,11 @@ static void syscall_handler(struct intr_frame *f) {
             } else {
                 item.fd = fd;
                 e = hash_find(&fd_table, &item.elem);
-                f->eax = file_read(hash_entry(e, struct item, elem)->file, buf, size);
+                if (!e) {
+                    f->eax = -1;
+                } else {
+                    f->eax = file_read(hash_entry(e, struct item, elem)->file, buf, size);
+                }
             }
             sema_up(&filesys_sem);
             break;
@@ -184,7 +199,9 @@ static void syscall_handler(struct intr_frame *f) {
             }
             item.fd = fd;
             e = hash_find(&fd_table, &item.elem);
-            file_seek(hash_entry(e, struct item, elem)->file, position);
+            if (e) {
+                file_seek(hash_entry(e, struct item, elem)->file, position);
+            }
             sema_up(&filesys_sem);
             break;
         case SYS_TELL:
@@ -197,7 +214,11 @@ static void syscall_handler(struct intr_frame *f) {
             }
             item.fd = fd;
             e = hash_find(&fd_table, &item.elem);
-            f->eax = (int)file_tell(hash_entry(e, struct item, elem)->file);
+            if (!e) {
+                f->eax = -1;
+            } else {
+                f->eax = (int)file_tell(hash_entry(e, struct item, elem)->file);
+            }
             sema_up(&filesys_sem);
             break;
         case SYS_FILESIZE:
@@ -210,7 +231,11 @@ static void syscall_handler(struct intr_frame *f) {
             }
             item.fd = fd;
             e = hash_find(&fd_table, &item.elem);
-            f->eax = (int)file_length(hash_entry(e, struct item, elem)->file);
+            if (!e) {
+                f->eax = -1;
+            } else {
+                f->eax = (int)file_length(hash_entry(e, struct item, elem)->file);
+            }            
             sema_up(&filesys_sem);
             break;
         default:

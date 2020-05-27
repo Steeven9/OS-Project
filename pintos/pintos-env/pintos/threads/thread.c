@@ -367,7 +367,8 @@ void thread_exit(void) {
     printf("%s: exit(%d)\n", thread_current()->name, thread_current()->result_code);
     if (thread_current()->parent) {
         thread_unblock(thread_current()->parent);
-    }
+		thread_block();
+    }	
 	list_remove(&thread_current()->allelem);
 	thread_current()->status = THREAD_DYING;
 	schedule();
